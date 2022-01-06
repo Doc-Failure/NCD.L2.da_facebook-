@@ -7,8 +7,6 @@ import getConfig from './config'
 const { networkId } = getConfig(process.env.NODE_ENV || 'development')
 
 export default function App() {
-  // use React Hooks to store greeting in component state
-  const [production, setProduction] = React.useState()
   const [receiver, setReceiver]= React.useState('');
   const [message, setMessage] = React.useState('');
 
@@ -16,14 +14,12 @@ export default function App() {
   const [profiles, setProfiles] = React.useState()
 
   const [messages, setMessages] = React.useState()
-  // when the user has not yet interacted with the form, disable the button
-  const [buttonDisabled, setButtonDisabled] = React.useState(true)
 
   // after submitting the form, we want to show Notification
   const [showNotification, setShowNotification] = React.useState(false)
 
   const handleNewAccount = async (e) => {
-    
+    e.preventDefault();
     let res = await window.contract.createProfile({_userName:e.target.username.value, _age:parseInt(e.target.age.value), _publicDescription:e.target.description.value, _profileId:window.walletConnection.account().accountId});
     
     let personalProfile = await window.contract.getProfile({_profileId: window.walletConnection.account().accountId})
@@ -32,9 +28,7 @@ export default function App() {
   }
 
   const getMessages = async (_receiver) => {
-    console.log(_receiver)
     let res = await window.contract.getMessages({receiver:_receiver});
-    console.log(res)
     setMessages(res);
   }
 
@@ -56,10 +50,11 @@ export default function App() {
          let profiles = await window.contract.getProfiles();
         setProfiles(profiles);
       }
-
+      if(window.walletConnection.isSignedIn()){
         let personalProfile = await window.contract.getProfile({_profileId: window.walletConnection.account().accountId})
         setPersonalProfile(personalProfile);
-        return;
+      }
+      return;
      },
     []
   ) 
@@ -67,15 +62,15 @@ export default function App() {
   // if not signed in, return early with sign-in prompt
   if (!window.walletConnection.isSignedIn()) {
     return (
-      <main>
+      <main className='flex flex-col'>
         <h1>DA_Facebook!</h1>
-        <p>
+        <p className="m-auto">
           To use Da_Facebook, you need to sign in, then, create a profile if you are a new user.
         </p>
-        <p>
+        <p className="m-auto">
           Go ahead and click the button below to try it out:
         </p>
-        <p style={{ textAlign: 'center', marginTop: '2.5em' }}>
+        <p className="m-auto inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
           <button onClick={login}>Sign in</button>
         </p>
       </main>
@@ -85,59 +80,55 @@ export default function App() {
   if(personalProfile===-1)
     return <div><p>...loading...</p></div>
   else if(!personalProfile){
-    return (<><button className="link" style={{ float: 'right' }} onClick={()=>logout}>
+    return (<><button className="link" style={{ float: 'right' }} onClick={logout}>
           Sign out
         </button>
-        <main>
-        <h1>
-          <label
+        <main className='flex flex-col'>
+        <h1></h1>
+        <label
             htmlFor="production"
-            style={{
-              color: 'var(--primary)',
-              borderBottom: '2px solid var(--primary)'
-            }}
+            className='m-auto'
           >Please, create an account!
           </label>
-          {' '/* React trims whitespace around tags; insert literal space character when needed */}
-        {/*   {window.accountId}! */}
-        </h1><div className="w-full max-w-xs">
-    <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" onSubmit={handleNewAccount}>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-          Username
-        </label>
-        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="Username" />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-          Profile Descriptioin
-        </label>
-        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="description" type="text" placeholder="Profile Description" />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="age">
-          Age
-        </label>
-        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="age" type="number" placeholder="Age" />
-      </div>
-      <div className="flex items-center justify-between">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
-          Create Account
-        </button>
-      </div>
-    </form>
-    <p className="text-center text-gray-500 text-xs">
-      &copy;2020 DA_Facebook. All rights reserved.
-    </p>
-    {/* //_userName:string, _age:i16, _publicDescription?:string, _profileId?:string */}
-  </div>
+        <div className="m-auto">
+          <div className=''>
+          <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" onSubmit={handleNewAccount}>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+                Username
+              </label>
+              <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text" placeholder="Username" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                Profile Description
+              </label>
+              <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="description" type="text" placeholder="Profile Description" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="age">
+                Age
+              </label>
+              <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="age" type="number" placeholder="Age" />
+            </div>
+            <div className="flex items-center justify-between">
+              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                Create Account
+              </button>
+            </div>
+          </form>
+          <p className="text-center text-gray-500 text-xs">
+            &copy;2020 DA_Facebook. All rights reserved.
+          </p>
+          </div>
+        </div>
       </main></>)
   }
 
   return (
     // use React Fragment, <>, to avoid wrapping elements in unnecessary divs
     <>
-      <button className="link" style={{ float: 'right' }} onClick={()=>logout}>
+      <button className="link" style={{ float: 'right' }} onClick={logout}>
         Sign out
       </button>
       <main className='flex-col'>
@@ -154,6 +145,38 @@ export default function App() {
         {/*   {window.accountId}! */}
         </h1>
         <div className='flex justify-around'>
+          <div className="col-span-6 sm:col-span-3 w-1/6">
+            <form onSubmit={async event => {
+            event.preventDefault()
+            // show Notification
+            setShowNotification(true)
+            // remove Notification again after css animation completes
+            // this allows it to be shown again next time the form is submitted
+            setTimeout(() => {
+              setShowNotification(false)
+            }, 11000)
+          }} className='border border-gray-400 px-4 py-2 pr-8 rounded'>
+          <div>
+              <label htmlFor="receiver" className="block text-sm font-medium text-gray-700">Receiver</label>
+              <select id="receiver" className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" onChange={(e)=>{setReceiver(e.target.value)}}>
+                {profiles.map((profile)=>{return <option key={profile.profileId} value={profile.profileId}>id: {profile.userName}</option>})}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+                Message
+              </label>
+              <div className="mt-1">
+                <textarea id="message" name="message" rows="3" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md" placeholder="Insert a message...." onChange={e => updateMessageContent(e)}></textarea>
+              </div>
+            </div>
+            <div className="px-4 py-3 text-right sm:px-6" >
+              <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onClick={()=>sendMessage()}>
+                Save
+              </button>
+            </div>
+          </form>
+          </div>
           <div>
             {profiles&&profiles.map((profile)=>{
             return <div className="max-w-md py-4 px-8 bg-white shadow-lg rounded-lg my-20 cursor-pointer" key={profile.profileId} onClick={()=>getMessages(profile.profileId)}>
@@ -170,50 +193,17 @@ export default function App() {
             </div>
           })}
         </div>
-        <div className='flex-col'>
+        <div className='flex flex-col'>
           {messages&&messages.map((message, index)=>{
-            return <div className="max-w-md py-4 px-8 bg-white shadow-lg rounded-lg my-20"><p className="mt-2 text-gray-600" key={index}>{message.sender}</p></div>
+            return (<div className="max-w-md px-8 bg-white shadow-lg rounded-lg my-5 cursor-pointer" key={index}>
+            <div>
+            <p className="mt-2 text-gray-600 font-semibold">Sender: {message.sender}</p>
+              <p className="mt-2 text-gray-600">Message: {message.text}</p>
+            </div></div>)
           })}
         </div>
       </div>
-        <form onSubmit={async event => {
-          event.preventDefault()
-          fieldset.disabled = false
-          // update local `greeting` variable to match persisted value
-          setProduction({_isProduction:true})
-          // show Notification
-          setShowNotification(true)
-          // remove Notification again after css animation completes
-          // this allows it to be shown again next time the form is submitted
-          setTimeout(() => {
-            setShowNotification(false)
-          }, 11000)
-        }} className='border border-gray-400 px-4 py-2 pr-8 rounded'>
-        <label  htmlFor="message">
-          Send Message
-        </label>
-        <label>
-          Receiver
-        </label>
-        <select className="block appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline" onChange={(e)=>{console.log(e.target.value);setReceiver(e.target.value)}}>
-          {profiles.map((profile)=>{return <option key={profile.profileId} value={profile.profileId}>id: {profile.profileId}</option>})}
-        </select>
-          <fieldset id="fieldset">
-            <div style={{ display: 'flex' }}>
-              <input
-                autoComplete="off"
-                defaultValue={production}
-                id="message"
-                onChange={e => updateMessageContent(e)}
-                style={{ flex: 1 }}
-              />
-              <button onClick={()=>sendMessage()} >
-                Send
-              </button>
-            </div>
-          </fieldset>
-        </form>
-        <hr />
+      <hr />
       </main>
       {showNotification && <Notification />}
     </>
